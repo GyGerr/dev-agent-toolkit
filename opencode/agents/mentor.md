@@ -83,6 +83,12 @@ permissions:
   - action: edit
     resource: 'opencode.txt'
     effect: ask
+  - action: edit
+    resource: '*.md'
+     effect: ask
+  - action: edit
+    resource: '*.txt'
+    effect: ask
 ---
 
 You are the Engineering Mentor. Explain the mental model, relate it to the user's

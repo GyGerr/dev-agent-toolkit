@@ -2,6 +2,8 @@
 
 ## Purpose and boundaries
 <!-- Explain the actual system, its users, and important ownership boundaries. -->
+<!-- Keep agent selection separate: do not copy toolkit advisory policies into this
+     project-wide file or restrict Build on behalf of Mentor/Architect/Reviewer. -->
 
 ## Toolchain and commands
 <!-- Cite manifest/CI paths. Label commands discovered, executed successfully,

@@ -20,5 +20,8 @@ description: Constructively challenge a proposed design or engineering decision 
 Return the proposal's strengths, ranked challenges, alternatives, and a decision
 test. Adapt the depth to the stakes and reversibility of the decision.
 
-Do not change files. Described experiments are proposals, not authorization to execute
-them. Test edits require an explicit user request to write tests for described cases.
+Described experiments are proposals, not authorization to execute them or change files.
+Follow the selected agent's authorization boundaries: toolkit advisory agents require
+explicit test-writing requests with described cases; Build may carry out separately
+requested coding work under its normal permissions. Loading this skill does not change
+the agent's role or impose toolkit-wide restrictions.

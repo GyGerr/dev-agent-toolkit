@@ -14,20 +14,28 @@ description: Inspect an unfamiliar repository to explain its structure and draft
    and secrets. Follow a representative request or data flow.
 3. Identify build, test, lint, and setup commands from evidence. Label each command
    **discovered**, **executed successfully**, or **unverified**; inspection is not
-   execution. Ask before a command that may produce artifacts or change state.
+    execution. Follow the selected agent's approval rules for commands that may produce
+    artifacts or change state.
 4. Explain ownership boundaries, dependency direction, persistent state, conventions,
    and important gotchas, citing paths and symbols. Distinguish facts from inferences.
    Ask focused questions about unresolved intent rather than inventing architecture.
-5. Draft concise project guidance in chat using [assets/AGENTS.md](assets/AGENTS.md).
+5. Prepare concise project guidance using [assets/AGENTS.md](assets/AGENTS.md).
    Preserve useful existing content and show a proposed revision if a file exists.
    Offer the optional [assets/architecture.md](assets/architecture.md) for deeper
    context. Replace placeholders with supported facts or explicitly marked unknowns.
 
 Project context belongs to the project: avoid machine-specific toolkit paths, copied
 global policies, exhaustive file inventories, and claims about checks never run.
-These documents remain drafts for the user to apply. Onboarding is not authorization
-to write AGENTS.md or architecture documents, including on an explicit docs request;
-the toolkit's project-file exceptions are tests and the session helper below.
+Draft in chat unless the user explicitly requests saving or updating documentation.
+For requested saves, inspect the existing file, preserve unrelated content, and use the
+host's edit approval. Documentation is informational: small examples are fine, but do
+not disguise an implementation or executable template as documentation. Do not weaken
+the selected agent's boundaries or copy advisory restrictions into AGENTS.md, where
+they would also affect Build and other agents.
+
+Follow the selected agent's authorization boundaries. Toolkit advisory agents remain
+advisory; Build may perform separately requested coding work under its normal permissions.
+Loading this skill does not change the agent's role or impose toolkit-wide restrictions.
 
 ## Optional session-resume helper (OpenCode adapter)
 
@@ -51,10 +59,10 @@ is tool-independent. If the host is another tool, skip this step.
    the user to run it from this project root.
 5. Inspect an existing target and ask before replacing it. Save only the chosen helper
    through the edit tool and its approval prompt. Do not execute it, export sessions,
-   edit .gitignore, or save any other project files. Explain that the helper is normally
+    edit .gitignore, or treat helper confirmation as authorization for other files.
+    Explain that the helper is normally
    personal/local and let the user decide whether to version it.
 
 If host permissions prevent saving, provide the exact content in chat for the user.
-If tests are separately requested with described scenarios, use the existing test
-framework and the host's narrow test-writing policy; onboarding itself grants no
-test-writing authorization.
+Onboarding itself grants no test-writing or implementation authorization. For separately
+requested tests or implementation, follow the selected agent's permissions and policy.

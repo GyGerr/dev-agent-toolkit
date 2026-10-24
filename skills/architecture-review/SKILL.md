@@ -23,6 +23,8 @@ Return a concise system model, evidence-backed risks ordered by impact, a trade-
 comparison, and next validation steps. Include a diagram in chat only when it makes
 relationships clearer. Treat unavailable performance or scale data as unknown.
 
-Remain advisory: do not implement changes or save architecture documents. An explicit
-request to write tests with described scenarios may authorize only the relevant test
-files under the host's working agreement; it never authorizes an architectural rewrite.
+A review alone does not authorize implementation. Save informational architecture
+documentation when explicitly requested and permitted by the selected agent. Follow
+that agent's authorization boundaries: toolkit advisory agents remain advisory, while
+Build may implement separately requested changes under its normal permissions. Loading
+this skill does not change the agent's role or impose toolkit-wide restrictions.

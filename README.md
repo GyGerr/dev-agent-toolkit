@@ -1,8 +1,11 @@
 # Engineering advisory toolkit
 
-A globally installed, **OpenCode v2** toolkit for engineering mentorship, architecture
-consulting, code review, feature planning, and language understanding. Skills are
-portable Markdown workflows; OpenCode-specific roles and permissions live separately.
+A globally installed, **OpenCode v2** toolkit adding optional engineering mentorship,
+architecture consulting, code review, feature planning, and language understanding.
+Choose **Build** for AI implementation, or **Mentor**, **Architect**, or **Reviewer**
+for advisory help. Installing the toolkit does not restrict Build or other agents.
+Skills are portable Markdown workflows; OpenCode-specific roles and permissions live
+separately.
 
 ## tl;dr setup and guide
 
@@ -27,11 +30,14 @@ cd /path/to/your/project
 opencode
 ```
 
-**Mentor** is the default. Choose a specialist at startup when useful:
+Your existing default agent is preserved; without a configured default, OpenCode uses
+**Build**. Select **Mentor**, **Architect**, or **Reviewer** when you want advisory help.
+For a non-interactive request, select the agent explicitly:
 
 ```sh
-opencode --agent architect
-opencode --agent reviewer
+opencode run --agent mentor "Explain this repository"
+opencode run --agent architect "Review our module boundaries"
+opencode run --agent build "Implement the requested parser fix"
 ```
 
 The agents and skills are global; onboarding inspects the repository where you launch
@@ -42,10 +48,12 @@ OpenCode. Each project's context and resume helper belong to that project.
 Send this in OpenCode:
 
 > @project-onboarding Inspect this repository, explain its structure, and draft an
-> accurate AGENTS.md. Also help me save opencode.sh to resume this session.
+> accurate AGENTS.md and save it after approval. Also help me save opencode.sh to
+> resume this session.
 
-Review and apply the `AGENTS.md` draft yourself. For the helper, provide the current
-session ID if asked, review the script, and confirm saving it in the project root.
+Ask for a chat draft instead if you do not want documentation saved. For the helper,
+provide the current session ID if asked, review the script, and confirm saving it in
+the project root.
 You can find session IDs with `opencode session list`. Each helper stores one chosen
 session ID; it does not automatically track your latest session.
 
@@ -70,7 +78,8 @@ Agent and skill IDs remain English. For example:
 > @project-onboarding Изучи этот репозиторий, объясни его устройство и подготовь
 > черновик AGENTS.md. Также помоги сохранить opencode.sh для восстановления этой сессии.
 
-Agents stay advisory. To authorize test writing, explicitly request tests and describe
+The three toolkit agents stay advisory. Build remains an implementation agent.
+To authorize test writing in an advisory role, explicitly request tests and describe
 the scenarios:
 
 > Напиши тесты для следующих сценариев: пустой ввод возвращает 0; отрицательное
@@ -87,24 +96,29 @@ sh ./opencode.sh
 Alternatively, ask onboarding for `opencode.txt` containing
 `opencode -s <sessionID>` and run that command from the project root.
 
-## Working style
+## Advisory-agent working style
 
 - Teach the mental model and trade-offs; help you form your own judgment.
 - Prefer simple designs grounded in actual requirements and repository evidence.
 - Use authoritative, version-aware sources for language semantics.
 - Stay advisory, including when asked to implement or fix production code.
 - Write tests **only when explicitly asked, with described test cases**.
-- Draft project context in chat. Onboarding can separately save a confirmed local
-  session-resume helper, as described below.
+- Save informational project documentation only when explicitly requested and approved;
+  otherwise draft in chat. Onboarding can also save a confirmed session-resume helper.
+
+These boundaries apply only to Mentor, Architect, and Reviewer. Select standard Build
+when you want AI to write or fix production code. Shared skills do not change the
+selected agent's role; a review or plan alone still does not authorize implementation.
 
 Test-writing example:
 
 > Write tests for these scenarios: empty input returns zero; negative input raises
 > ValueError; malformed input raises ValueError. Use the existing test framework.
 
-"Write tests" needs clarification about cases. "Review and fix", "add coverage", and
-tool permission approval do not authorize implementation. A failing regression test
-stays a reported failure; agents do not change production code to make it pass.
+In advisory roles, "write tests" needs clarification about cases. "Review and fix",
+"add coverage", and tool permission approval do not authorize implementation. A failing
+regression test stays a reported failure; advisory agents do not change production code
+to make it pass.
 
 ## Install globally
 
@@ -122,14 +136,17 @@ The installer:
 
 1. Links all seven skills into `~/.config/opencode/skills/`.
 2. Links Mentor, Architect, and Reviewer into `~/.config/opencode/agents/`.
-3. Links the shared baseline at `~/.config/opencode/toolkit/engineering.md`.
-4. Adds that path to global `instructions` and selects `mentor` as `default_agent`.
+3. Links the shared agreement at `~/.config/opencode/toolkit/engineering.md` for reference.
+4. Leaves global `instructions`, permissions, other agents, and `default_agent` unchanged.
+
+Each toolkit agent embeds the agreement in its own system prompt. It is **not** loaded
+as global instructions. Validation checks the embedded copies against the shared source.
 
 Existing JSON/JSONC settings and comments outside the changed values are preserved.
 Existing instruction entries are retained. The installer refuses name collisions and
-unowned links rather than replacing them. It records ownership and previous default
-selection in a private `dev-agent-toolkit-state.json` alongside the global config.
-It leaves global `AGENTS.md` files alone and adds the baseline through `instructions`.
+unowned links rather than replacing them. It records ownership in a private
+`dev-agent-toolkit-state.json` alongside the global config. It leaves global `AGENTS.md`
+files alone and does not override Build, Plan, General, Explore, or custom agents.
 
 `XDG_CONFIG_HOME` is respected. For an explicit global configuration directory:
 
@@ -144,10 +161,10 @@ selects an executable for the version check. A dry run previews installation eve
 before v2 is available; actual installation rejects v1 and missing executables.
 
 **Quit and restart OpenCode after installation or configuration changes**, and start
-a fresh session to select the new default. V2 also provides `opencode reload` for its
+a fresh session when changing roles. V2 also provides `opencode reload` for its
 background service; restarting provides a straightforward verification baseline.
 Inspect `opencode debug agents` and `opencode debug config` to confirm discovery and
-effective configuration. Doctor checks toolkit links and global activation, not every
+effective configuration. Doctor checks toolkit links and agent-local activation, not every
 project or managed override.
 
 ### Updates and uninstall
@@ -167,31 +184,42 @@ sh install.sh uninstall --dry-run
 sh install.sh uninstall
 ```
 
-Uninstall removes owned links and the added instruction entry. It restores the
-previous default only if the current default is still `mentor`, preserving later
-user choices and unrelated settings. It may leave empty directories and an empty
-configuration object. A replaced owned link blocks uninstall for inspection rather
+Upgrading an older installation removes its **recorded, installer-added** global
+advisory instruction. If the default is still the old installer-selected `mentor`, it
+restores the recorded previous default (or removes the setting if none existed).
+Later choices such as `build` or a custom agent are preserved. An unchanged `mentor`
+selection cannot be distinguished from a later deliberate selection of the same value;
+select Mentor again after migration if wanted. Unowned instruction entries are not
+removed; doctor flags a remaining toolkit global instruction for manual inspection.
+
+Uninstall removes owned links, preserving the default agent and unrelated settings.
+It also supports cleaning up the recorded activation of older installations. It may
+leave empty directories and an empty configuration object. A replaced owned link blocks
+uninstall for inspection rather
 than deleting the replacement. Interrupted installs retain an ownership manifest for
 recovery; rerun install or uninstall after resolving the reported problem.
 
 ## Everyday use
 
-Select a primary role in OpenCode, or choose one at startup:
+Select a primary role in OpenCode, or choose one for a non-interactive request:
 
 ```sh
-opencode --agent mentor
-opencode --agent architect
-opencode --agent reviewer
+opencode run --agent mentor "Explain this module"
+opencode run --agent architect "Assess these boundaries"
+opencode run --agent reviewer "Review the current diff"
+opencode run --agent build "Fix the requested bug and add tests"
 ```
 
 | Role | Focus |
 | --- | --- |
+| Standard Build | AI implementation and testing under normal OpenCode permissions |
 | Engineering Mentor | Explanations, debugging guidance, learning, engineering judgment |
 | Software Architect | System boundaries, dependencies, trade-offs, incremental evolution |
 | Code Reviewer | Correctness, idiomatic usage, regressions, maintainability |
 
-All three are primary conversational agents with the same advisory boundary. They do
-not delegate. They inherit your selected model rather than pinning a provider/model.
+The three toolkit roles are primary conversational agents with the same advisory
+boundary. They do not delegate. They inherit your selected model rather than pinning
+a provider/model.
 
 Skills load on demand. In OpenCode v2, mention `@skill-id` to request one explicitly:
 
@@ -207,8 +235,10 @@ Skills load on demand. In OpenCode v2, mention `@skill-id` to request one explic
 
 ### Onboarding and session restoration
 
-Onboarding inspects the repository and drafts project-specific `AGENTS.md` and optional
-architecture documentation **in chat**, for you to review and apply. It distinguishes
+Onboarding inspects the repository and prepares project-specific `AGENTS.md` and optional
+architecture documentation. Ask for a chat draft or explicitly request a saved document,
+which requires edit approval. It does not copy advisory policies into project-wide
+guidance, so other agents remain usable for coding. It distinguishes
 discovered commands, successfully executed commands, and unverified commands.
 
 For a local resume helper, ask:
@@ -226,30 +256,36 @@ exec opencode -s 'ses_abc123'
 
 Run it later with `sh ./opencode.sh`. A plain `opencode.txt` containing
 `opencode -s ses_abc123` is also supported; run that command from the project root.
-The saved helper is the specific non-test artifact exception. It is not executed
-during onboarding. Existing helpers require replacement confirmation. If the current
+The saved helper is a separate exception from documentation and tests. It is not
+executed during onboarding. Existing helpers require replacement confirmation. If the current
 ID is unavailable, the skill asks you for it; it does not guess the newest session.
 Use `opencode session list` to locate the ID. A helper refers to a local session; it
 does not back up the session or make it available on another machine.
 
 ## Permissions and project context
 
-The shared policy is in [`instructions/engineering.md`](instructions/engineering.md).
+The agent-local policy source is [`instructions/engineering.md`](instructions/engineering.md).
 Each agent denies tools by default, enables inspection/documentation tools, asks before
 shell/external-directory access, and asks before edits to conventional test paths and
-the root resume helper. Other edit paths and delegation are denied.
+the root resume helper, plus `.md` and `.txt` documentation paths. Protected OpenCode
+configuration and toolkit policy paths remain denied, even with those extensions.
+Other edit paths and delegation are denied. These are **toolkit-agent** rules only.
 
 These path rules are an operational backstop, not a semantic test detector: a file in
 `tests/` is not necessarily a genuine test, and some projects use other conventions.
 The agent must check purpose and scenario-based authorization before proposing an
-edit. For unrecognized test paths, it provides test content in chat rather than using
+edit. Likewise, documentation is authorized by purpose and content, not just an extension:
+small examples are fine, but complete implementations, executable Markdown/MDX, encoded
+code, scripts, and application-consumed templates are not documentation exceptions.
+For unrecognized paths, it provides content in chat rather than using
 shell to bypass the restriction. Shell approval deserves the same scope review as an
 edit, because commands can change files. Test runs may produce caches/reports; those
 side effects are handled with a bounded approval.
 
 Put local commands, conventions, and architecture constraints in project `AGENTS.md`.
-Keep global teaching preferences in the baseline. Skills provide workflows, not
-permission to expand writes. OpenCode combines instruction sources, and projects can
+Keep toolkit teaching preferences in the agent-local agreement, not global instructions
+or project AGENTS.md. Skills provide workflows, not permission to expand writes.
+OpenCode combines instruction sources, and projects can
 override configuration: use effective-config inspection when behavior differs.
 See [design](docs/design.md) and [compatibility](docs/compatibility.md) for details.
 
@@ -284,7 +320,7 @@ skills/<name>/SKILL.md         Tool-independent workflow library
 skills/project-onboarding/
   assets/                     Context drafts and OpenCode resume template
 opencode/agents/               Native v2 primary roles and permissions
-opencode/config.example.json   Minimal activation example
+opencode/config.example.json   Minimal config without global advisory activation
 scripts/                      Installer and validation
 tests/                        Installation tests, fixtures, behavior scenarios
 docs/                         Design, compatibility, evaluation

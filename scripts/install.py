@@ -236,12 +236,41 @@ def validate_instructions(config):
     return value
 
 
+def remove_legacy_activation(config, state):
+    """Undo only recorded pre-agent-scoping activation, preserving later choices."""
+    if not state or state.get("activation_scope") == "agents":
+        return config
+    instructions = validate_instructions(config)
+    if state["instruction_added"] and state["instruction"] in instructions:
+        remaining = [item for item in instructions if item != state["instruction"]]
+        config = config.set("instructions", remaining) if (
+            remaining or state["previous_instructions_present"]
+        ) else config.remove("instructions")
+    if config.data.get("default_agent") == "mentor":
+        config = config.set("default_agent", state["previous_default"]) if (
+            state["previous_default_present"]
+        ) else config.remove("default_agent")
+    return config
+
+
+def has_global_agreement(config):
+    """Recognize concrete global references, including symlink and home aliases."""
+    agreement = (ROOT / "instructions/engineering.md").resolve()
+    for entry in validate_instructions(config):
+        if "://" in entry:
+            continue
+        path = Path(entry).expanduser()
+        if path.is_absolute() and path.resolve() == agreement:
+            return True
+    return False
+
+
 def install(config_dir, dry_run, binary):
     state_path = config_dir / STATE_NAME
     state = read_state(state_path)
     path = config_path(config_dir, state)
     config = load_config(path)
-    instructions = validate_instructions(config)
+    validate_instructions(config)
     links = links_for(config_dir)
     owned = state["links"] if state else {}
     for destination, source in links.items():
@@ -254,16 +283,15 @@ def install(config_dir, dry_run, binary):
             raise InstallError(f"Obsolete owned destination has been changed: {old}")
 
     instruction = str(config_dir / "toolkit/engineering.md")
-    new_config = config
+    new_config = remove_legacy_activation(config, state)
     if "$schema" not in config.data:
         new_config = new_config.set("$schema", SCHEMA)
-    if instruction not in instructions:
-        new_config = new_config.set("instructions", instructions + [instruction])
-    new_config = new_config.set("default_agent", "mentor")
     print(f"{'Preview' if dry_run else 'Install'}: {config_dir}")
     for destination, source in links.items():
         print(f"  link {destination} -> {source}")
-    print(f"  activate mentor and engineering instructions in {path}")
+    print(f"  install optional advisory agents; preserve default and global rules in {path}")
+    if state and state.get("activation_scope") != "agents":
+        print("  migrate recorded global advisory activation to agent-local prompts")
     if dry_run:
         print("Dry run: no files changed. Activation requires OpenCode v2.")
         return
@@ -271,10 +299,7 @@ def install(config_dir, dry_run, binary):
     if state is None:
         state = {
             "format": 1, "root": str(ROOT), "config_path": str(path),
-            "previous_default_present": "default_agent" in config.data,
-            "previous_default": config.data.get("default_agent"),
-            "previous_instructions_present": "instructions" in config.data,
-            "instruction_added": instruction not in instructions,
+            "activation_scope": "agents",
             "schema_added": "$schema" not in config.data,
         }
     # Write ownership before mutations so an interrupted install can be uninstalled.
@@ -292,6 +317,9 @@ def install(config_dir, dry_run, binary):
     if new_config.text != config.text or not path.exists():
         atomic_write(path, new_config.text)
     state["links"] = new_links
+    # Mark migration complete only after the configuration has been written, so
+    # interrupted upgrades can safely retry the legacy cleanup.
+    state["activation_scope"] = "agents"
     atomic_write(state_path, json.dumps(state, indent=2) + "\n")
     print(f"Installed for OpenCode {detected}. Quit and restart OpenCode to load the toolkit.")
 
@@ -304,16 +332,8 @@ def uninstall(config_dir, dry_run):
         return
     path = Path(state["config_path"])
     config = load_config(path)
-    instructions = validate_instructions(config)
-    if state["instruction_added"] and state["instruction"] in instructions:
-        remaining = [item for item in instructions if item != state["instruction"]]
-        config = config.set("instructions", remaining) if (
-            remaining or state["previous_instructions_present"]
-        ) else config.remove("instructions")
-    if config.data.get("default_agent") == "mentor":
-        config = config.set("default_agent", state["previous_default"]) if (
-            state["previous_default_present"]
-        ) else config.remove("default_agent")
+    validate_instructions(config)
+    config = remove_legacy_activation(config, state)
     if state["schema_added"] and config.data.get("$schema") == SCHEMA:
         config = config.remove("$schema")
     for destination, source in state["links"].items():
@@ -354,9 +374,11 @@ def status(config_dir, binary):
         print(f"{'OK' if okay else 'BROKEN'} {destination}")
         healthy = healthy and okay
     config = load_config(Path(state["config_path"]))
-    active = (config.data.get("default_agent") == "mentor"
-              and state["instruction"] in validate_instructions(config))
-    print("Global activation: " + ("OK" if active else "CHANGED"))
+    active = (state.get("activation_scope") == "agents"
+              and not has_global_agreement(config))
+    print("Agent-local advisory activation: " + ("OK" if active else "CHECK REQUIRED"))
+    if not active:
+        print("Rerun install to migrate owned global rules; inspect any user-managed instruction entry.")
     print("Project or managed settings may override globals; inspect OpenCode's resolved config.")
     return healthy and active
 

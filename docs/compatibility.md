@@ -10,10 +10,9 @@ and installed version take precedence over copied examples.
 - POSIX shell for `install.sh` and the session helper; Linux/macOS are the initial targets.
 - Symlink-capable filesystem and a stable checkout path.
 
-The development machine has OpenCode **1.18.31**. Actual activation deliberately rejects
-it. The generated config and agent definitions have been checked against the live v2
-schema. Installation behavior is tested in isolated directories with a mocked v2
-version. Native v2 agent/skill discovery and real model/tool behavior still require
+The development machine reports OpenCode **2.1.4**. Activation rejects v1 and missing
+executables. Installation behavior is tested in isolated directories with a mocked v2
+version. Native v2 agent/skill discovery and real model/tool behavior require
 the smoke tests in [evaluation.md](evaluation.md); schema validity does not establish
 runtime compatibility. Version `2.0.21` in unit tests is a fixture, not a tested release.
 
@@ -26,8 +25,8 @@ runtime compatibility. Version `2.0.21` in unit tests is a fixture, not a tested
 | Permissions | Ordered `permissions` rules with `action`, `resource`, `effect` |
 | Permission actions | `edit`, `shell`, `subagent`; last matching rule wins |
 | Global skills | `skills/<id>/SKILL.md`; supporting paths are relative to the skill directory |
-| Extra baseline | Absolute path appended to the `instructions` array |
-| Default role | `default_agent: mentor`; existing sessions may retain their selected role |
+| Advisory agreement | Embedded only in the three toolkit agents; never appended to global `instructions` |
+| Default role | Existing selection preserved; OpenCode falls back to Build if unset |
 | Resume session | `opencode -s <sessionID>` (`--session` long form) |
 | Discover session IDs | `opencode session list`; do not infer the current ID from ordering |
 
@@ -38,6 +37,9 @@ the user's executable. Check current OpenCode installation instructions when upg
 V2 instruction discovery differs from v1 and from other tools. It recognizes AGENTS.md,
 combines global/project/configured instructions, and discovers nested guidance during
 exploration. Avoid assuming that a filename alone implements an override policy.
+In particular, putting advisory rules in global `instructions` or project AGENTS.md
+would affect Build too. Installations made by the old installer are migrated using
+their ownership manifest; manually added global rules require manual review.
 
 ## Authoritative sources
 

@@ -44,25 +44,36 @@ def check(live_schema=False):
         assert data["name"] == name and re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", name)
         assert len(name) <= 64 and 1 <= len(data["description"]) <= 1024
         assert len(body.splitlines()) < 500 and body.strip()
+        assert "Loading this skill" in " ".join(body.split()), f"Missing agent-scope guidance: {name}"
         for target in re.findall(r"\]\(([^)]+)\)", body):
             if "://" not in target and not target.startswith("#"):
                 assert (path.parent / target.split("#")[0]).is_file(), f"Missing reference: {target}"
     agents = {}
     canonical_rules = None
+    agreement = (ROOT / "instructions/engineering.md").read_text(encoding="utf-8").strip()
     for path in sorted((ROOT / "opencode/agents").glob("*.md")):
         data, body = frontmatter(path)
         assert data["mode"] == "primary" and body.strip()
+        embedded = body.split("<!-- BEGIN ENGINEERING AGREEMENT: keep identical to instructions/engineering.md -->\n", 1)[1]
+        embedded, remainder = embedded.split("\n<!-- END ENGINEERING AGREEMENT -->", 1)
+        assert embedded.strip() == agreement and not remainder.strip(), f"Agreement drift: {path}"
         assert "permission" not in data and "tools" not in data
         rules = data["permissions"]
         assert all(set(rule) == {"action", "resource", "effect"} for rule in rules)
         if canonical_rules is None:
             canonical_rules = rules
         assert rules == canonical_rules, "Advisory permissions drifted between roles"
-        for target in ("src/main.py", "package.json", "AGENTS.md", "docs/architecture.md", ".gitignore"):
+        for target in ("src/main.py", "package.json", ".gitignore", "src/feature.mdx",
+                       ".opencode/agents/build.md", "pkg/.opencode/skills/test/SKILL.md",
+                       ".git/config.md", "opencode/agents/mentor.md", "instructions/engineering.md",
+                       "/custom/opencode/toolkit/engineering.md", "/custom/opencode/agents/mentor.md",
+                       "/custom/opencode/skills/example/SKILL.md", "skills/code-review/SKILL.md",
+                       "/custom/opencode/commands/implement.md", "/checkout/skills/example/SKILL.md"):
             assert permission(rules, "edit", target) == "deny", target
         for target in ("tests/test_parser.py", "pkg/tests/helper.py", "test/a.ts", "src/a.test.ts",
                        "src/a.spec.ts", "test_parser.py", "pkg/test_parser.py", "pkg/a_test.go",
-                       "__tests__/a.js", "opencode.sh", "opencode.txt"):
+                       "__tests__/a.js", "opencode.sh", "opencode.txt", "AGENTS.md",
+                       "docs/architecture.md", "ROADMAP.md", "docs/notes.txt"):
             assert permission(rules, "edit", target) == "ask", target
         for action in ("subagent", "untrusted_write", "github_create_pull_request", "execute"):
             assert permission(rules, action, "*") == "deny"
@@ -71,10 +82,10 @@ def check(live_schema=False):
         agents[path.stem] = {**data, "system": body}
     assert set(agents) == {"mentor", "architect", "reviewer"}
     config = json.loads((ROOT / "opencode/config.example.json").read_text(encoding="utf-8"))
-    assert config["default_agent"] == "mentor"
+    assert config == {"$schema": "https://opencode.ai/config.json"}, "Example must not activate global restrictions"
     scenarios = json.loads((ROOT / "tests/scenarios/behavior.json").read_text(encoding="utf-8"))
     assert len({case["id"] for case in scenarios}) == len(scenarios)
-    assert all(case["prompt"] and case["expected"] and case["agent"] in agents for case in scenarios)
+    assert all(case["prompt"] and case["expected"] and case["agent"] in {*agents, "build"} for case in scenarios)
     if live_schema:
         import jsonschema
         request = urllib.request.Request("https://opencode.ai/config.json",
@@ -94,6 +105,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     try:
         check(args.live_schema)
-    except (AssertionError, ValueError, KeyError) as exc:
+    except (AssertionError, ValueError, KeyError, IndexError) as exc:
         print(f"Validation failed: {exc}", file=sys.stderr)
         sys.exit(1)

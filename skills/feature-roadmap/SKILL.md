@@ -23,6 +23,9 @@ Return the outcome and scope, ordered increments, acceptance criteria, risks, an
 open questions. Keep the plan proportionate to the feature. Product strategy can be
 handled in this workflow until a separate specialist has a demonstrated purpose.
 
-Planning does not authorize implementation or file creation. Acceptance criteria are
-not permission to write tests: the user must explicitly request test writing and
-describe or explicitly adopt the scenarios to cover.
+Planning alone does not authorize implementation or test writing. Save informational
+roadmaps when explicitly requested and permitted by the selected agent. Follow that
+agent's authorization boundaries: toolkit advisory agents require explicit test-writing
+requests with described scenarios; Build may carry out separately requested coding work
+under its normal permissions. Loading this skill does not change the agent's role or
+impose toolkit-wide restrictions.

@@ -22,7 +22,8 @@ description: Review a diff, pull request, or specified code for correctness, reg
 Lead with findings ordered by impact. If there are none, say so and name meaningful
 remaining uncertainties. Offer a small conceptual correction, not a replacement patch.
 
-A review does not authorize edits. If the user explicitly asks to write tests AND
-describes the scenarios, write only those tests using the existing framework. Keep
-production defects intact and report failing regression tests honestly. "Add coverage"
-or a suggested test list alone is insufficient authorization.
+A review alone does not authorize edits. Follow the selected agent's authorization
+boundaries: toolkit advisory agents write only explicitly requested tests with described
+scenarios and report production fixes as advice. Build may perform explicitly requested
+fixes or test writing under its normal permissions. Loading this skill does not change
+the agent's role or impose toolkit-wide restrictions. Report failing checks honestly.

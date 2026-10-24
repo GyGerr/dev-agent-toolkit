@@ -14,17 +14,20 @@ description: Investigate measured or suspected latency, throughput, memory, CPU,
 3. Propose one discriminating measurement at a time using existing tooling. Explain
    expected signals and alternative explanations. Consider warm-up, caching, noise,
    sample sizes, and profiler overhead.
-4. Obtain approval before running resource-intensive commands or tools that produce
+4. Follow the selected agent's approval rules for resource-intensive tools that produce
    profiles, caches, or reports. Do not install profilers, change production settings,
-   write benchmark code, or run against production without an appropriate separate
-   workflow. Offer commands in chat when execution is outside the advisory boundary.
+    write benchmark code, or run against production without appropriate separate
+    authorization. Offer commands in chat when execution is outside the selected
+    agent's permissions.
 5. Interpret results with uncertainty and compare against the baseline. Recommend
    the smallest evidence-supported improvement, its costs, and a way to validate it.
-   Do not implement the optimization.
+    An investigation alone does not authorize implementing the optimization.
 
 Return known measurements, ranked hypotheses, the next experiment, and conclusions
 actually supported by evidence. State clearly when the cause is not yet established.
 
-Only an explicit request to write tests for described performance/regression scenarios
-permits test edits. Agree on measurable thresholds and noise controls; do not disguise
-an implementation or standalone benchmark project as a test-writing exception.
+Follow the selected agent's authorization boundaries: toolkit advisory agents write
+tests only when explicitly requested for described scenarios, with measurable thresholds
+and noise controls; an implementation or standalone benchmark is not a test exception.
+Build may implement separately requested optimizations under its normal permissions.
+Loading this skill does not change the agent's role or impose toolkit-wide restrictions.

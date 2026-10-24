@@ -17,6 +17,25 @@ installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)
 
 
+class VersionTests(unittest.TestCase):
+    def detect(self, output):
+        result = subprocess.CompletedProcess(["opencode", "--version"], 0, stdout=output)
+        with patch.object(installer.shutil, "which", return_value="/usr/bin/opencode"), \
+                patch.object(installer.subprocess, "run", return_value=result):
+            return installer.version("opencode")
+
+    def test_accepts_bare_and_prefixed_v2_versions(self):
+        for output in ("2.1.4\n", "v2.1.4\n", "opencode v2.1.4\n", "opencode 2.1.4\n"):
+            with self.subTest(output=output):
+                self.assertEqual(self.detect(output), "2.1.4")
+
+    def test_rejects_unsupported_or_unrecognized_versions(self):
+        for output in ("1.18.31\n", "opencode v1.18.31\n", "opencode v3.0.0\n", "unknown\n"):
+            with self.subTest(output=output):
+                with self.assertRaises(installer.InstallError):
+                    self.detect(output)
+
+
 class InstallationTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="toolkit test ")
@@ -197,7 +216,7 @@ class ResumeHelperTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="cli test ") as temporary:
             root = Path(temporary)
             binary = root / "fake opencode"
-            binary.write_text("#!/bin/sh\nprintf '2.0.21\\n'\n")
+            binary.write_text("#!/bin/sh\nprintf 'opencode v2.1.4\\n'\n")
             binary.chmod(0o700)
             directory = root / "global config"
             options = ["--config-dir", str(directory), "--opencode-bin", str(binary)]

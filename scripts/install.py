@@ -180,10 +180,10 @@ def version(binary):
                                 text=True, check=True, timeout=15)
     except (subprocess.SubprocessError, OSError) as exc:
         raise InstallError(f"Unable to check OpenCode version: {exc}") from exc
-    match = re.search(r"\b(\d+)\.(\d+)\.(\d+)\b", result.stdout)
+    match = re.search(r"\bv?(\d+)\.(\d+)\.(\d+)\b", result.stdout)
     if not match or int(match[1]) != 2:
         raise InstallError(f"OpenCode v2 is required; detected {result.stdout.strip()!r}.")
-    return match[0]
+    return ".".join(match.groups())
 
 
 def links_for(config_dir):

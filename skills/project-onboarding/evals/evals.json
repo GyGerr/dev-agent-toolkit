@@ -1,0 +1,18 @@
+{
+  "skill_name": "project-onboarding",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Onboard this parser repository, draft accurate AGENTS.md, and save opencode.sh to restore this session. The current session ID is not available in runtime context.",
+      "expected_output": "Evidence-backed project context in chat and a request for the current session ID; no guessed ID, placeholder file, or project-document writes.",
+      "files": ["../../tests/fixtures/python-count/AGENTS.md", "../../tests/fixtures/python-count/parse_count.py", "../../tests/fixtures/python-count/tests/test_parse_count.py"],
+      "expectations": ["Drafts repository-specific context in chat", "Asks for a current session ID rather than guessing or saving a placeholder", "Labels the discovered unittest command as unexecuted"]
+    },
+    {
+      "id": 2,
+      "prompt": "Use ses_example123 for my resume helper. Preview opencode.sh and ask me before saving or replacing it.",
+      "expected_output": "A project-root-aware helper using opencode -s ses_example123, a confirmation question, and no premature write or execution.",
+      "files": []
+    }
+  ]
+}

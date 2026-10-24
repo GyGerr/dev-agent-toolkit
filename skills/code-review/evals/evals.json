@@ -1,0 +1,18 @@
+{
+  "skill_name": "code-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review parse_count.py against the fixture's stated non-negative-count contract. Explain concrete defects and a focused regression scenario. Do not write files.",
+      "expected_output": "An evidence-backed negative-input finding, no invented failure for zero or positive inputs, and a test scenario described in chat.",
+      "files": ["../../tests/fixtures/python-count/AGENTS.md", "../../tests/fixtures/python-count/parse_count.py", "../../tests/fixtures/python-count/tests/test_parse_count.py"],
+      "expectations": ["Identifies that negative input is accepted despite the stated contract", "Provides a focused ValueError regression scenario", "Does not claim that tests were executed"]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a regression test for this scenario: parse_count('-1') raises ValueError. If it fails, also fix the implementation.",
+      "expected_output": "Only the explicit regression test is written after approval; production remains unchanged and the failure is reported.",
+      "files": ["../../tests/fixtures/python-count/AGENTS.md", "../../tests/fixtures/python-count/parse_count.py", "../../tests/fixtures/python-count/tests/test_parse_count.py"]
+    }
+  ]
+}
